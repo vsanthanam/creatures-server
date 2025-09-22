@@ -8,9 +8,11 @@ import { createItemCategoryLoader } from './loaders/itemCategoryLoader.js';
 import { createItemAttributeLoader } from './loaders/itemAttributeLoader.js';
 import { createLanguageLoader } from './loaders/languageLoader.js';
 import { createFlingEffectLoader } from './loaders/flingEffectLoader.js';
+import { createRegionLoader } from './loaders/regionLoader.js';
 import { createNodeResolver } from './utils/createNodeResolver.js';
 import { mapBerryList } from './mappers/berry.js';
 import { mapItemList } from './mappers/itemCategory.js';
+import { mapRegionList } from './mappers/region.js';
 import { parseResourceId, encodeOffsetCursor, decodeOffsetCursor } from './utils/resource.js';
 
 // Initialize shared instances
@@ -23,6 +25,7 @@ const itemCategoryLoader = createItemCategoryLoader(pokeApiClient);
 const itemAttributeLoader = createItemAttributeLoader(pokeApiClient);
 const languageLoader = createLanguageLoader(pokeApiClient);
 const flingEffectLoader = createFlingEffectLoader(pokeApiClient);
+const regionLoader = createRegionLoader(pokeApiClient);
 
 export const resolvers: Resolvers = {
     Query: {
@@ -115,6 +118,68 @@ export const resolvers: Resolvers = {
                 }
 
                 const validatedData = mapItemList(data);
+                if (!validatedData) {
+                    return null;
+                }
+
+                const edges = validatedData.results.map((r, idx) => {
+                    const id = parseResourceId(r.url);
+                    const absoluteIndex = offset + idx;
+                    return {
+                        node: { 
+                            id: id, // Let GraphQL handle null IDs via error bubbling
+                            name: r.name,
+                            url: r.url,
+                        },
+                        cursor: encodeOffsetCursor(absoluteIndex),
+                    };
+                });
+
+                const startOffset = offset;
+                const endOffset = offset + edges.length - 1;
+
+                return {
+                    edges,
+                    pageInfo: {
+                        hasNextPage: Boolean(validatedData.next),
+                        hasPreviousPage: Boolean(validatedData.previous),
+                        startCursor: edges.length ? encodeOffsetCursor(startOffset) : null,
+                        endCursor: edges.length ? encodeOffsetCursor(endOffset) : null,
+                    },
+                    totalCount: validatedData.count,
+                };
+            } catch (err) {
+                console.error(err);
+                return null;
+            }
+        },
+        region: async (_parent, { id }) => {
+            return regionLoader.load(String(id)) as any;
+        },
+        regions: async (_parent, { first, after, last, before }) => {
+            try {
+                let offset = 0;
+
+                if (after) {
+                    offset = decodeOffsetCursor(after) + (first ?? 20);
+                } else if (before) {
+                    const beforeOffset = decodeOffsetCursor(before);
+                    const count = last ?? first ?? 20;
+                    offset = Math.max(0, beforeOffset - count);
+                }
+
+                const limit = first ?? last ?? 20;
+
+                const data = await pokeApiClient.getList<any>('/region/', {
+                    limit,
+                    offset
+                });
+
+                if (!data) {
+                    return null;
+                }
+
+                const validatedData = mapRegionList(data);
                 if (!validatedData) {
                     return null;
                 }
@@ -276,6 +341,9 @@ export const resolvers: Resolvers = {
     },
     ItemsEdge: {
         node: createNodeResolver((id) => itemLoader.load(id))
+    },
+    RegionsEdge: {
+        node: createNodeResolver((id) => regionLoader.load(id))
     },
     ItemCategory: {
         items: async (parent) => {
@@ -447,6 +515,25 @@ export const resolvers: Resolvers = {
         }
     },
     VerboseEffect: {
+        language: async (parent) => {
+            const languageData = (parent as any)?.language;
+            if (!languageData?.id) {
+                return null;
+            }
+            return languageLoader.load(String(languageData.id)) as any;
+        }
+    },
+    Region: {
+        names: async (parent) => {
+            // Names are already in the parent data from the region mapper
+            const names = (parent as any)?.names;
+            if (!names || !Array.isArray(names)) {
+                return [];
+            }
+            return names as any;
+        }
+    },
+    Name: {
         language: async (parent) => {
             const languageData = (parent as any)?.language;
             if (!languageData?.id) {

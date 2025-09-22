@@ -164,6 +164,12 @@ export type LanguageName = {
   name: Scalars['String']['output'];
 };
 
+export type Name = {
+  __typename?: 'Name';
+  language?: Maybe<Language>;
+  name?: Maybe<Scalars['String']['output']>;
+};
+
 export type NamedResource = {
   id: Scalars['ID']['output'];
   name: Scalars['String']['output'];
@@ -184,6 +190,8 @@ export type Query = {
   berry?: Maybe<Berry>;
   item?: Maybe<Item>;
   items: ItemsConnection;
+  region?: Maybe<Region>;
+  regions: RegionsConnection;
 };
 
 
@@ -210,6 +218,40 @@ export type QueryItemsArgs = {
   before?: InputMaybe<Scalars['String']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type QueryRegionArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryRegionsArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+};
+
+export type Region = NamedResource & {
+  __typename?: 'Region';
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+  names?: Maybe<Array<Maybe<Name>>>;
+  url: Scalars['String']['output'];
+};
+
+export type RegionsConnection = {
+  __typename?: 'RegionsConnection';
+  edges: Array<RegionsEdge>;
+  pageInfo: PageInfo;
+  totalCount?: Maybe<Scalars['Int']['output']>;
+};
+
+export type RegionsEdge = {
+  __typename?: 'RegionsEdge';
+  cursor: Scalars['String']['output'];
+  node: Region;
 };
 
 export type VerboseEffect = {
@@ -303,6 +345,7 @@ export type ResolversInterfaceTypes<_RefType extends Record<string, unknown>> = 
     | ( Omit<GenericItem, 'attributes' | 'category' | 'flingEffect'> & { attributes?: Maybe<Array<Maybe<_RefType['ItemAttribute']>>>, category?: Maybe<_RefType['ItemCategory']>, flingEffect?: Maybe<_RefType['FlingEffect']> } )
     | ( Omit<ItemAttribute, 'items'> & { items?: Maybe<Array<Maybe<_RefType['Item']>>> } )
     | ( Omit<ItemCategory, 'items'> & { items?: Maybe<Array<Maybe<_RefType['Item']>>> } )
+    | ( Region )
   ;
 };
 
@@ -328,9 +371,13 @@ export type ResolversTypes = {
   ItemsEdge: ResolverTypeWrapper<Omit<ItemsEdge, 'node'> & { node: ResolversTypes['Item'] }>;
   Language: ResolverTypeWrapper<Language>;
   LanguageName: ResolverTypeWrapper<LanguageName>;
+  Name: ResolverTypeWrapper<Name>;
   NamedResource: ResolverTypeWrapper<ResolversInterfaceTypes<ResolversTypes>['NamedResource']>;
   PageInfo: ResolverTypeWrapper<PageInfo>;
   Query: ResolverTypeWrapper<Record<PropertyKey, never>>;
+  Region: ResolverTypeWrapper<Region>;
+  RegionsConnection: ResolverTypeWrapper<RegionsConnection>;
+  RegionsEdge: ResolverTypeWrapper<RegionsEdge>;
   String: ResolverTypeWrapper<Scalars['String']['output']>;
   VerboseEffect: ResolverTypeWrapper<VerboseEffect>;
 };
@@ -357,9 +404,13 @@ export type ResolversParentTypes = {
   ItemsEdge: Omit<ItemsEdge, 'node'> & { node: ResolversParentTypes['Item'] };
   Language: Language;
   LanguageName: LanguageName;
+  Name: Name;
   NamedResource: ResolversInterfaceTypes<ResolversParentTypes>['NamedResource'];
   PageInfo: PageInfo;
   Query: Record<PropertyKey, never>;
+  Region: Region;
+  RegionsConnection: RegionsConnection;
+  RegionsEdge: RegionsEdge;
   String: Scalars['String']['output'];
   VerboseEffect: VerboseEffect;
 };
@@ -494,8 +545,13 @@ export type LanguageNameResolvers<ContextType = any, ParentType extends Resolver
   name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
 };
 
+export type NameResolvers<ContextType = any, ParentType extends ResolversParentTypes['Name'] = ResolversParentTypes['Name']> = {
+  language?: Resolver<Maybe<ResolversTypes['Language']>, ParentType, ContextType>;
+  name?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+};
+
 export type NamedResourceResolvers<ContextType = any, ParentType extends ResolversParentTypes['NamedResource'] = ResolversParentTypes['NamedResource']> = {
-  __resolveType: TypeResolveFn<'Berry' | 'BerryFirmness' | 'BerryFlavor' | 'FlingEffect' | 'GenericItem' | 'ItemAttribute' | 'ItemCategory', ParentType, ContextType>;
+  __resolveType: TypeResolveFn<'Berry' | 'BerryFirmness' | 'BerryFlavor' | 'FlingEffect' | 'GenericItem' | 'ItemAttribute' | 'ItemCategory' | 'Region', ParentType, ContextType>;
 };
 
 export type PageInfoResolvers<ContextType = any, ParentType extends ResolversParentTypes['PageInfo'] = ResolversParentTypes['PageInfo']> = {
@@ -510,6 +566,27 @@ export type QueryResolvers<ContextType = any, ParentType extends ResolversParent
   berry?: Resolver<Maybe<ResolversTypes['Berry']>, ParentType, ContextType, RequireFields<QueryBerryArgs, 'id'>>;
   item?: Resolver<Maybe<ResolversTypes['Item']>, ParentType, ContextType, RequireFields<QueryItemArgs, 'id'>>;
   items?: Resolver<ResolversTypes['ItemsConnection'], ParentType, ContextType, Partial<QueryItemsArgs>>;
+  region?: Resolver<Maybe<ResolversTypes['Region']>, ParentType, ContextType, RequireFields<QueryRegionArgs, 'id'>>;
+  regions?: Resolver<ResolversTypes['RegionsConnection'], ParentType, ContextType, Partial<QueryRegionsArgs>>;
+};
+
+export type RegionResolvers<ContextType = any, ParentType extends ResolversParentTypes['Region'] = ResolversParentTypes['Region']> = {
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  names?: Resolver<Maybe<Array<Maybe<ResolversTypes['Name']>>>, ParentType, ContextType>;
+  url?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type RegionsConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['RegionsConnection'] = ResolversParentTypes['RegionsConnection']> = {
+  edges?: Resolver<Array<ResolversTypes['RegionsEdge']>, ParentType, ContextType>;
+  pageInfo?: Resolver<ResolversTypes['PageInfo'], ParentType, ContextType>;
+  totalCount?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
+};
+
+export type RegionsEdgeResolvers<ContextType = any, ParentType extends ResolversParentTypes['RegionsEdge'] = ResolversParentTypes['RegionsEdge']> = {
+  cursor?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  node?: Resolver<ResolversTypes['Region'], ParentType, ContextType>;
 };
 
 export type VerboseEffectResolvers<ContextType = any, ParentType extends ResolversParentTypes['VerboseEffect'] = ResolversParentTypes['VerboseEffect']> = {
@@ -536,9 +613,13 @@ export type Resolvers<ContextType = any> = {
   ItemsEdge?: ItemsEdgeResolvers<ContextType>;
   Language?: LanguageResolvers<ContextType>;
   LanguageName?: LanguageNameResolvers<ContextType>;
+  Name?: NameResolvers<ContextType>;
   NamedResource?: NamedResourceResolvers<ContextType>;
   PageInfo?: PageInfoResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
+  Region?: RegionResolvers<ContextType>;
+  RegionsConnection?: RegionsConnectionResolvers<ContextType>;
+  RegionsEdge?: RegionsEdgeResolvers<ContextType>;
   VerboseEffect?: VerboseEffectResolvers<ContextType>;
 };
 
