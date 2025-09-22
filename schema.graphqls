@@ -1,9 +1,163 @@
 type Query {
-    berry(id: ID!): Berry
+  berry(id: ID!): Berry
+  berries(first: Int, after: String, last: Int, before: String): BerriesConnection!
+  item(id: ID!): Item
+  items(first: Int, after: String, last: Int, before: String): ItemsConnection!
 }
 
-type Berry {
-    id: ID!
-    name: String
-    taco: Int
+type Berry implements Item & NamedResource {
+  id: ID!
+  name: String!
+  url: String!
+  growthTime: Int
+  naturalGiftPower: Int
+  size: Int
+  smoothness: Int
+  soilDryness: Int
+  firmness: BerryFirmness
+  flavors: [BerryFlavorPresence]
+  cost: Int
+  flingPower: Int
+  category: ItemCategory
+  flingEffect: FlingEffect
+  attributes: [ItemAttribute]
+  effects: [VerboseEffect]
+}
+
+type BerryFirmness implements NamedResource {
+  id: ID!
+  name: String!
+  url: String!
+  berries: [Berry]
+}
+
+type BerryFlavor implements NamedResource {
+  id: ID!
+  name: String!
+  url: String!
+}
+
+type BerryFlavorPresence { # This is BerryFlavorMap on the API
+  potency: Int
+  flavor: BerryFlavor
+}
+
+type BerriesConnection {
+  edges: [BerriesEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int
+}
+
+type BerriesEdge {
+  cursor: String!
+  node: Berry!
+}
+
+type PageInfo {
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: String
+  endCursor: String
+}
+
+type ItemsConnection {
+  edges: [ItemsEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int
+}
+
+type ItemsEdge {
+  cursor: String!
+  node: Item!
+}
+
+interface NamedResource {
+  id: ID!
+  url: String!
+  name: String!
+}
+
+interface Item implements NamedResource {
+  id: ID!
+  name: String!
+  url: String!
+  cost: Int
+  flingPower: Int
+  category: ItemCategory
+  flingEffect: FlingEffect
+  attributes: [ItemAttribute]
+  effects: [VerboseEffect]
+}
+
+type GenericItem implements Item & NamedResource {
+  id: ID!
+  name: String!
+  url: String!
+  cost: Int
+  flingPower: Int
+  category: ItemCategory
+  flingEffect: FlingEffect
+  attributes: [ItemAttribute]
+  effects: [VerboseEffect]
+}
+
+type ItemCategory implements NamedResource {
+  id: ID!
+  name: String!
+  url: String!
+  items: [Item]
+}
+
+type Language {
+  id: ID!
+  name: String!
+  url: String!
+  official: Boolean
+  iso639: String
+  iso3166: String
+  names: [LanguageName]
+}
+
+type LanguageName {
+  name: String!
+  language: Language
+}
+
+type Effect {
+  effect: String
+  language: Language
+}
+
+type FlingEffect implements NamedResource {
+  id: ID!
+  name: String!
+  url: String!
+  effects: [Effect]
+  items: [Item]
+}
+
+type ItemAttribute implements NamedResource {
+  id: ID!
+  name: String!
+  url: String!
+  items: [Item]
+  descriptions: [Description]
+}
+
+type ItemCategory implements NamedResource {
+  id: ID!
+  name: String!
+  url: String!
+  items: [Item]
+}
+
+type Description {
+  description: String
+  language: Language
+}
+
+type VerboseEffect {
+  effect: String
+  shortEffect: String
+  language: Language
 }

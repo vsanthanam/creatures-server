@@ -9,7 +9,7 @@ const server = new ApolloServer({
     typeDefs,
     resolvers,
 });
-  
+
 const { url } = await startStandaloneServer(
     server,
     {
